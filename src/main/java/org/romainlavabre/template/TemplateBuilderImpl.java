@@ -71,6 +71,10 @@ public class TemplateBuilderImpl implements TemplateBuilder {
 
 
     protected String getPath( final String name ) {
+        if ( name.startsWith( "/" ) ) {
+            return name;
+        }
+
         return TemplateConfigurer.get().getBaseTemplatePath() +
                 name +
                 ".vm";
