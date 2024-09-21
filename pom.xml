@@ -7,7 +7,7 @@
     <groupId>org.romainlavabre</groupId>
     <artifactId>template</artifactId>
 
-    <version>3.0.1</version>
+    <version>4.0.0</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -20,22 +20,14 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>6.1.1</version>
+            <version>6.1.13</version>
         </dependency>
 
         <!-- TEMPLATE -->
         <dependency>
             <groupId>org.apache.velocity</groupId>
-            <artifactId>velocity</artifactId>
-            <version>1.7</version>
-        </dependency>
-
-        <!-- TEST -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.11</version>
-            <scope>test</scope>
+            <artifactId>velocity-engine-core</artifactId>
+            <version>2.3</version>
         </dependency>
     </dependencies>
 

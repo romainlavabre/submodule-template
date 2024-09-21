@@ -71,8 +71,8 @@ public class TemplateBuilderImpl implements TemplateBuilder {
 
 
     protected String getPath( final String name ) {
-        if ( name.startsWith( "/" ) ) {
-            return name;
+        if ( name.startsWith( "//" ) ) {
+            return name.substring( 1);
         }
 
         return TemplateConfigurer.get().getBaseTemplatePath() +
