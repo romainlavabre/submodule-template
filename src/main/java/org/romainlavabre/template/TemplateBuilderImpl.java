@@ -23,12 +23,12 @@ public class TemplateBuilderImpl implements TemplateBuilder {
 
     public TemplateBuilderImpl() {
         this.velocityEngineRelative = new VelocityEngine();
-        this.velocityEngineRelative.setProperty( RuntimeConstants.RESOURCE_LOADER, "classpath" );
-        this.velocityEngineRelative.setProperty( "classpath.resource.loader.class", ClasspathResourceLoader.class.getName() );
+        this.velocityEngineRelative.setProperty( RuntimeConstants.RESOURCE_LOADERS, "classpath" );
+        this.velocityEngineRelative.setProperty( "resource.loader.classpath.class", ClasspathResourceLoader.class.getName() );
         this.velocityEngineRelative.init();
 
         this.velocityEngineAbsolute = new VelocityEngine();
-        this.velocityEngineAbsolute.setProperty( "file.resource.loader.path", "/" );
+        this.velocityEngineAbsolute.setProperty( "resource.loader.file.path", "/" );
         this.velocityEngineAbsolute.init();
     }
 
