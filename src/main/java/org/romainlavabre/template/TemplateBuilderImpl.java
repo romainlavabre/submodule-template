@@ -10,6 +10,7 @@ import org.apache.velocity.util.introspection.SecureUberspector;
 import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,6 +22,8 @@ public class TemplateBuilderImpl implements TemplateBuilder {
     protected final static String         ENCODING = "UTF-8";
     protected              VelocityEngine velocityEngineRelative;
     protected              VelocityEngine velocityEngineAbsolute;
+    protected              VelocityEngine velocityEngineTextRelative;
+    protected              VelocityEngine velocityEngineTextAbsolute;
 
 
     @Override
@@ -50,6 +53,53 @@ public class TemplateBuilderImpl implements TemplateBuilder {
         }
 
         return this.getContent( velocityContext, template );
+    }
+
+
+    @Override
+    public Rendered render( final String name, final Map< String, Object > parameters ) {
+        initEngines();
+
+        String path = getPath( name );
+
+        final Template template = path.startsWith( "/" )
+                ? this.velocityEngineAbsolute.getTemplate( path, TemplateBuilderImpl.ENCODING )
+                : this.velocityEngineRelative.getTemplate( path, TemplateBuilderImpl.ENCODING );
+
+        final VelocityContext velocityContext = context( parameters );
+        final String          content         = this.getContent( velocityContext, template );
+        final Map< String, Object > variables = new HashMap<>();
+
+        for ( String key : velocityContext.getKeys() ) {
+            variables.put( key, velocityContext.get( key ) );
+        }
+
+        return new Rendered( content, variables );
+    }
+
+
+    @Override
+    public String buildText( final String name, final Map< String, Object > parameters ) {
+        initEngines();
+
+        String path = getPath( name );
+
+        final Template template = path.startsWith( "/" )
+                ? this.velocityEngineTextAbsolute.getTemplate( path, TemplateBuilderImpl.ENCODING )
+                : this.velocityEngineTextRelative.getTemplate( path, TemplateBuilderImpl.ENCODING );
+
+        return this.getContent( context( parameters ), template );
+    }
+
+
+    protected VelocityContext context( final Map< String, Object > parameters ) {
+        final VelocityContext velocityContext = new VelocityContext();
+
+        if ( parameters != null ) {
+            parameters.forEach( velocityContext::put );
+        }
+
+        return velocityContext;
     }
 
 
@@ -94,8 +144,28 @@ public class TemplateBuilderImpl implements TemplateBuilder {
         secure( absolute, configurer );
         absolute.init();
 
-        this.velocityEngineAbsolute = absolute;
-        this.velocityEngineRelative = relative;
+        VelocityEngine textRelative = new VelocityEngine();
+        textRelative.setProperty( RuntimeConstants.RESOURCE_LOADERS, "classpath" );
+        textRelative.setProperty( "resource.loader.classpath.class", ClasspathResourceLoader.class.getName() );
+        secureIntrospection( textRelative, configurer );
+        textRelative.init();
+
+        VelocityEngine textAbsolute = new VelocityEngine();
+        textAbsolute.setProperty( "resource.loader.file.path", "/" );
+        secureIntrospection( textAbsolute, configurer );
+        textAbsolute.init();
+
+        this.velocityEngineTextAbsolute = textAbsolute;
+        this.velocityEngineTextRelative = textRelative;
+        this.velocityEngineAbsolute     = absolute;
+        this.velocityEngineRelative     = relative;
+    }
+
+
+    protected void secureIntrospection( VelocityEngine engine, TemplateConfigurer configurer ) {
+        if ( configurer != null && configurer.isSecureIntrospection() ) {
+            engine.setProperty( RuntimeConstants.UBERSPECT_CLASSNAME, SecureUberspector.class.getName() );
+        }
     }
 
 

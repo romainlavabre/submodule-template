@@ -1,3 +1,4 @@
+4.2.0: ADD render (variables set by the template, read back as text) and buildText (plain text, never escaped)
 4.1.0: ADD HTML escaping and secure introspection options
 4.0.2: Upgrade velocity to 2.4.1 & FIX CVE
 4.0.1: FIX Deprecation

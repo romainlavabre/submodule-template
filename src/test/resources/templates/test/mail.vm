@@ -1,0 +1,2 @@
+#set( $subject = "Devis $data.number" )
+<p>$data.name</p>
