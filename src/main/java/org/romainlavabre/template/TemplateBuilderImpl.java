@@ -3,8 +3,10 @@ package org.romainlavabre.template;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.app.event.implement.EscapeHtmlReference;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+import org.apache.velocity.util.introspection.SecureUberspector;
 import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
@@ -21,18 +23,6 @@ public class TemplateBuilderImpl implements TemplateBuilder {
     protected              VelocityEngine velocityEngineAbsolute;
 
 
-    public TemplateBuilderImpl() {
-        this.velocityEngineRelative = new VelocityEngine();
-        this.velocityEngineRelative.setProperty( RuntimeConstants.RESOURCE_LOADERS, "classpath" );
-        this.velocityEngineRelative.setProperty( "resource.loader.classpath.class", ClasspathResourceLoader.class.getName() );
-        this.velocityEngineRelative.init();
-
-        this.velocityEngineAbsolute = new VelocityEngine();
-        this.velocityEngineAbsolute.setProperty( "resource.loader.file.path", "/" );
-        this.velocityEngineAbsolute.init();
-    }
-
-
     @Override
     public String build( final String name ) {
         assert name != null && !name.isBlank() : "variable name should not be null or blank";
@@ -44,6 +34,8 @@ public class TemplateBuilderImpl implements TemplateBuilder {
     @Override
     public String build( final String name, final Map< String, Object > parameters ) {
         assert name != null && !name.isBlank() : "variable name should not be null or blank";
+
+        initEngines();
 
         String path = getPath( name );
 
@@ -78,5 +70,46 @@ public class TemplateBuilderImpl implements TemplateBuilder {
         return TemplateConfigurer.get().getBaseTemplatePath() +
                 name +
                 ".vm";
+    }
+
+
+    /**
+     * At the first build and not in the constructor: the configuration is usually built after this bean.
+     */
+    protected synchronized void initEngines() {
+        if ( this.velocityEngineRelative != null ) {
+            return;
+        }
+
+        TemplateConfigurer configurer = TemplateConfigurer.getIfInitialized();
+
+        VelocityEngine relative = new VelocityEngine();
+        relative.setProperty( RuntimeConstants.RESOURCE_LOADERS, "classpath" );
+        relative.setProperty( "resource.loader.classpath.class", ClasspathResourceLoader.class.getName() );
+        secure( relative, configurer );
+        relative.init();
+
+        VelocityEngine absolute = new VelocityEngine();
+        absolute.setProperty( "resource.loader.file.path", "/" );
+        secure( absolute, configurer );
+        absolute.init();
+
+        this.velocityEngineAbsolute = absolute;
+        this.velocityEngineRelative = relative;
+    }
+
+
+    protected void secure( VelocityEngine engine, TemplateConfigurer configurer ) {
+        if ( configurer == null ) {
+            return;
+        }
+
+        if ( configurer.isEscapeHtml() ) {
+            engine.setProperty( RuntimeConstants.EVENTHANDLER_REFERENCEINSERTION, EscapeHtmlReference.class.getName() );
+        }
+
+        if ( configurer.isSecureIntrospection() ) {
+            engine.setProperty( RuntimeConstants.UBERSPECT_CLASSNAME, SecureUberspector.class.getName() );
+        }
     }
 }
